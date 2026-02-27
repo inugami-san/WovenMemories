@@ -258,6 +258,99 @@
                 checkAnswer();
             }
         });
+
+        // Replace with your actual Gemini API Key
+        const API_KEY = 'AIzaSyArxE7W_cMaulTvWHjfCwNggi4UFWRUgWc'; 
+        
+        // We'll use the gemini-2.5-flash model as it's fast and great for text generation
+        const API_URL = `hhttps://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+        
+        async function generateNewStory() {
+            // 1. Define the prompt you want to send to Gemini
+            const promptText = `
+                You are generating content for a story-based word-guessing game. Your task is to produce a short story snippet along with **one word that the player needs to guess**, formatted as JSON. The story and the word must match the player-selected **difficulty** and **genre**.
+                ### Input Parameters:
+                - difficulty: Easy / Medium / Hard
+                  - Easy → simple words, short story, straightforward clues
+                  - Medium → moderately complex words, some ambiguity, slightly longer story
+                  - Hard → abstract or metaphorical words, story with multiple interpretations
+                - genre: Adventure / Mystery / Psychological / Cozy / Romance / Fantasy
+                - Each player can receive a unique word; ensure it is guessable from the story.
+                
+                ### Output Requirements:
+                - Must be a JSON object with exactly these keys:
+                  - "question_description": The story snippet or dialogue for the player to read.
+                  - "answer": The word the player must guess.
+                  - "word_length": Number of letters in the word (integer).
+                  - "hint": Optional short hint (1 sentence) for Medium and Hard difficulty. For Easy, the hint should be simple and obvious.
+                - The JSON must be valid (no extra commentary or explanation outside JSON).
+                
+                ### Example Input:
+                difficulty: Easy
+                genre: Romance
+                
+                ### Example Output:
+                {
+                  "question_description": "Every time I saw her, my heart skipped a beat. I couldn’t stop thinking about the way she smiled at me.",
+                  "answer": "love",
+                  "word_length": 4,
+                  "hint": "An emotion that binds hearts together"
+                }
+                
+                ### Notes:
+                - Keep story snippet 3–5 sentences.
+                - The word should feel natural in the story.
+                - Adjust ambiguity and complexity based on difficulty.
+                - Make sure hints are meaningful but don’t give the answer away.
+                - Output **ONLY the JSON**, nothing else.
+            `;
+        
+            // 2. Set up the request body according to the Gemini API structure
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: promptText
+                    }]
+                }]
+            };
+        
+            try {
+                // 3. Make the native fetch (AJAX) request
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+        
+                // 4. Check if the request was successful
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+        
+                // 5. Parse the JSON response
+                const data = await response.json();
+                
+                // 6. Extract the text from the Gemini response structure
+                const generatedText = data.candidates[0].content.parts[0].text;
+                
+                console.log("Gemini Output:\n", generatedText);
+                
+                // From here, you can split the text into 'Story' and 'Answer' 
+                // and update your HTML elements!
+                return generatedText;
+        
+            } catch (error) {
+                console.error("The wind stopped blowing! Error fetching story:", error);
+                return null;
+            }
+        }
+        
+        // Call the function to test it
+        let result = generateNewStory();
+
+        console.log(result);
     </script>
 </body>
 </html>
